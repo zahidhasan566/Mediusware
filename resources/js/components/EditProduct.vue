@@ -6,15 +6,15 @@
                     <div class="card-body">
                         <div class="form-group">
                             <label for="">Product Name</label>
-                            <input type="text" v-model="product_name" placeholder="Product Name" class="form-control">
+                            <input type="text" v-model="product['title']"  placeholder="Product Name" class="form-control">
                         </div>
                         <div class="form-group">
                             <label for="">Product SKU</label>
-                            <input type="text" v-model="product_sku" placeholder="Product Name" class="form-control">
+                            <input type="text" v-model="product['sku']" placeholder="Product Name" class="form-control">
                         </div>
                         <div class="form-group">
                             <label for="">Description</label>
-                            <textarea v-model="description" id="" cols="30" rows="4" class="form-control"></textarea>
+                            <textarea v-model="product['description']" id="" cols="30" rows="4" class="form-control"></textarea>
                         </div>
                     </div>
                 </div>
@@ -35,25 +35,22 @@
                         <h6 class="m-0 font-weight-bold text-primary">Variants</h6>
                     </div>
                     <div class="card-body">
-                        <div class="row" v-for="(item,index) in product_variant">
+                        <div class="row" v-for="(item,index) in product_variants">
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="">Option</label>
-                                    <select v-model="item.option" class="form-control">
-                                        <option v-for="variant in variants"
-                                                :value="variant.id">
-                                            {{ variant.title }}
-                                        </option>
+                                    <select v-model="item.id" class="form-control">
+                                        <option :value="item.id">{{ item.title }}</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-8">
                                 <div class="form-group">
-                                    <label v-if="product_variant.length != 1" @click="product_variant.splice(index,1); checkVariant"
+                                    <label v-if="item.product_variant_names.length != 1" @click="item.product_variant_names.splice(index,1); checkVariant"
                                            class="float-right text-primary"
                                            style="cursor: pointer;">Remove</label>
                                     <label v-else for="">.</label>
-                                    <input-tag v-model="item.tags" @input="checkVariant" class="form-control"></input-tag>
+                                    <input-tag v-model="item.product_variant_names" @input="checkVariant" class="form-control"></input-tag>
                                 </div>
                             </div>
                         </div>
@@ -102,21 +99,28 @@ import 'vue2-dropzone/dist/vue2Dropzone.min.css'
 import InputTag from 'vue-input-tag'
 
 export default {
+    name:'edit-product',
     components: {
         vueDropzone: vue2Dropzone,
-        InputTag
+        InputTag,
     },
     props: {
         variants: {
+            required: true
+        },
+        product: {
+            required: true
+        },
+        product_variants: {
             type: Array,
             required: true
-        }
+        },
     },
     data() {
         return {
-            product_name: '',
-            product_sku: '',
-            description: '',
+            product_name: this.product['title'],
+            product_sku: this.product['sku'],
+            description: this.product['description'],
             images: [],
             product_variant: [
                 {
@@ -180,16 +184,18 @@ export default {
         // store product into database
         saveProduct() {
             let product = {
-                title: this.product_name,
-                sku: this.product_sku,
-                description: this.description,
+                id: this.product.id,
+                title: this.product.title,
+                sku: this.product.sku,
+                description: this.product.description,
                 product_image: this.images,
-                product_variant: this.product_variant,
+                product_variants: this.product_variants,
                 product_variant_prices: this.product_variant_prices
             }
-            axios.post('/product', product).then(response => {
+
+            axios.put('/product/' + product.id, product).then(response => {
                 alert(response.data.success);
-                console.log(response.data);
+                console.log(product);
 
             }).catch(error => {
                 console.log(error);
